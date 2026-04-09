@@ -7,9 +7,6 @@
 
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
 
-// ====== OLED BITMAP (from your code) ======
-extern const unsigned char oled_image[] PROGMEM;
-
 // ====== BUTTON ======
 const int buttonPin = 2;
 
@@ -39,12 +36,6 @@ void setup() {
   pinMode(buttonPin, INPUT);
 
   display.begin(SSD1306_SWITCHCAPVCC, 0x3C);
-
-  // ===== Startup animation =====
-  display.clearDisplay();
-  //display.drawBitmap(0, 0, oled_image, 128, 64, WHITE);
-  display.display();
-  delay(1500);
 
   display.clearDisplay();
   display.setTextSize(2);
@@ -79,7 +70,6 @@ void loop() {
         if (!longPressTriggered) {
 
           if (running) {
-            // STORE LAP
             if (lapIndex < MAX_LAPS) {
               laps[lapIndex++] = elapsedTime;
             }
@@ -118,12 +108,11 @@ void loop() {
   display.clearDisplay();
   display.setTextColor(WHITE);
 
-  // Time breakdown
   int minutes = (elapsedTime / 60000);
   int seconds = (elapsedTime / 1000) % 60;
-  int centiseconds = (elapsedTime % 1000) / 10;
+  int ms = elapsedTime % 1000;
 
-  // Main time (big)
+  // Main time
   display.setTextSize(2);
   display.setCursor(10, 0);
 
@@ -135,14 +124,17 @@ void loop() {
   display.print(seconds);
   display.print(":");
 
-  if (centiseconds < 10) display.print("0");
-  display.print(centiseconds);
+  if (ms < 100) display.print("0");
+  if (ms < 10) display.print("0");
+  display.print(ms);
 
   // ===== LAPS =====
   display.setTextSize(1);
   for (int i = 0; i < lapIndex; i++) {
+
     int m = laps[i] / 60000;
     int s = (laps[i] / 1000) % 60;
+    int lms = laps[i] % 1000;
 
     display.setCursor(0, 30 + i * 10);
     display.print("L");
@@ -155,9 +147,14 @@ void loop() {
 
     if (s < 10) display.print("0");
     display.print(s);
+    display.print(":");
+
+    if (lms < 100) display.print("0");
+    if (lms < 10) display.print("0");
+    display.print(lms);
   }
 
-  display.display();
+  display.display();  //VERY IMPORTANT
 
   lastButtonState = reading;
 }
